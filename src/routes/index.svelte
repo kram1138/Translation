@@ -1,45 +1,71 @@
 <script lang="ts">
-	import Counter from '$lib/Counter.svelte';
+    import { downloadObjectAsYaml } from "../utils/files";
+    import { parse, stringify } from "yaml";
+
+    let files: FileList;
+    let source: Record<string, string>;
+    $: {
+        if (files && files[0]) {
+            let binfile = files[0];
+            let reader = new FileReader();
+            reader.onload = function (evt) {
+                source = parse(
+                    new TextDecoder("utf-8").decode(
+                        evt.target.result as ArrayBuffer
+                    )
+                );
+            };
+            reader.readAsArrayBuffer(binfile);
+        }
+    }
+    $: entries = Object.entries(source ?? {});
+
+    let dest: Record<string, string> = {};
+
+    function download() {
+        downloadObjectAsYaml(dest, "fr.yaml");
+    }
 </script>
 
 <main>
-	<h1>Hello world!</h1>
+    <h1>Translations</h1>
+    <input type="file" bind:files />
+    <button on:click={download}>Download translation</button>
 
-	<Counter />
-
-	<p>Visit <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
+    {#each entries as [key, en]}
+        <div class="string">
+            <div class="context">
+                <div class="source">{en}</div>
+                <div class="key">{key}</div>
+            </div>
+            <div class="translation"><textarea bind:value={dest[key]} /></div>
+        </div>
+    {/each}
+    <pre>{stringify(dest)}</pre>
 </main>
 
 <style lang="scss">
-	main {
-		text-align: center;
-		padding: 1em;
-		margin: 0 auto;
-	}
+    .string {
+        display: flex;
+        padding: 16px;
+    }
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4rem;
-		font-weight: 100;
-		line-height: 1.1;
-		margin: 4rem auto;
-		max-width: 14rem;
-	}
+    .context {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
 
-	p {
-		max-width: 14rem;
-		margin: 2rem auto;
-		line-height: 1.35;
-	}
+    .key {
+        color: gray;
+        padding-left: 8px;
+    }
 
-	@media (min-width: 480px) {
-		h1 {
-			max-width: none;
-		}
-
-		p {
-			max-width: none;
-		}
-	}
+    .translation {
+        display: flex;
+        flex: 1;
+        textarea {
+            flex: 1;
+        }
+    }
 </style>
