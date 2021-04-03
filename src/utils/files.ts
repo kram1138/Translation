@@ -1,4 +1,4 @@
-import { stringify } from "yaml";
+import { dump } from "js-yaml";
 
 function downloadFromURI(href: string, fileName: string) {
     const downloadLink = document.createElement("a");
@@ -19,5 +19,5 @@ export function downloadObjectAsJson(obj: unknown, fileName: string) {
 }
 
 export function downloadObjectAsYaml(obj: unknown, fileName: string) {
-    downloadFile(stringify(obj), fileName);
+    downloadFile(dump(obj), fileName);
 }

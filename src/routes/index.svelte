@@ -1,27 +1,33 @@
+<script lang="ts" context="module">
+    import type { Load } from "@sveltejs/kit";
+
+    export const load: Load = async ({ page, fetch }) => {
+        const url = `/source`;
+        const res = await fetch(url);
+
+        if (res.ok) {
+            return {
+                props: {
+                    source: await res.json(),
+                },
+            };
+        }
+
+        return {
+            status: res.status,
+            error: new Error(`Could not load ${url}`),
+        };
+    };
+</script>
+
 <script lang="ts">
     import { downloadObjectAsYaml } from "../utils/files";
-    import { parse, stringify } from "yaml";
+    import { dump } from "js-yaml";
 
-    let files: FileList;
-    let source: Record<string, string>;
-    $: {
-        if (files && files[0]) {
-            let binfile = files[0];
-            let reader = new FileReader();
-            reader.onload = function (evt) {
-                source = parse(
-                    new TextDecoder("utf-8").decode(
-                        evt.target.result as ArrayBuffer
-                    )
-                );
-            };
-            reader.readAsArrayBuffer(binfile);
-        }
-    }
-    $: entries = Object.entries(source ?? {});
+    export let source: Record<string, string>;
+    let entries = Object.entries(source ?? {});
 
     let dest: Record<string, string> = {};
-
     function download() {
         downloadObjectAsYaml(dest, "fr.yaml");
     }
@@ -29,7 +35,6 @@
 
 <main>
     <h1>Translations</h1>
-    <input type="file" bind:files />
     <button on:click={download}>Download translation</button>
 
     {#each entries as [key, en]}
@@ -38,10 +43,13 @@
                 <div class="source">{en}</div>
                 <div class="key">{key}</div>
             </div>
-            <div class="translation"><textarea bind:value={dest[key]} /></div>
+            <div class="translation">
+                <textarea bind:value={dest[key]} />
+            </div>
         </div>
     {/each}
-    <pre>{stringify(dest)}</pre>
+
+    <pre>{dump(dest)}</pre>
 </main>
 
 <style lang="scss">
