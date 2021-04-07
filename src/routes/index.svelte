@@ -1,79 +1,56 @@
 <script lang="ts" context="module">
+    import StringView from "$lib/StringView.svelte";
+    import type { LanguageDef } from "$lib/translations";
     import type { Load } from "@sveltejs/kit";
 
     export const load: Load = async ({ page, fetch }) => {
-        const url = `/source`;
-        const res = await fetch(url);
+        const url = `/translations/`;
+        const src = await fetch(url + "en");
+        const dest = await fetch(url + "fr");
 
-        if (res.ok) {
+        if (src.ok && dest.ok) {
             return {
                 props: {
-                    source: await res.json(),
+                    source: await src.json(),
+                    dest: await dest.json(),
                 },
             };
         }
 
         return {
-            status: res.status,
+            status: src.status,
             error: new Error(`Could not load ${url}`),
         };
     };
 </script>
 
 <script lang="ts">
-    import { downloadObjectAsYaml } from "../utils/files";
-    import { dump } from "js-yaml";
+    export let source: LanguageDef;
+    export let dest: LanguageDef = {};
 
-    export let source: Record<string, string>;
     let entries = Object.entries(source ?? {});
 
-    let dest: Record<string, string> = {};
-    function download() {
-        downloadObjectAsYaml(dest, "fr.yaml");
+    function save(key, { detail }: CustomEvent<string>) {
+        dest[key] = [{ v: detail, t: new Date().toISOString() }, ...dest[key]];
+        fetch("./translations/fr", {
+            method: "POST",
+            body: JSON.stringify(dest),
+        });
     }
 </script>
 
 <main>
     <h1>Translations</h1>
-    <button on:click={download}>Download translation</button>
 
-    {#each entries as [key, en]}
-        <div class="string">
-            <div class="context">
-                <div class="source">{en}</div>
-                <div class="key">{key}</div>
-            </div>
-            <div class="translation">
-                <textarea bind:value={dest[key]} />
-            </div>
-        </div>
+    {#each entries as [key, src]}
+        <StringView
+            {src}
+            {key}
+            dest={dest[key]}
+            on:save={(event) => save(key, event)}
+        />
     {/each}
-
-    <pre>{dump(dest)}</pre>
 </main>
 
 <style lang="scss">
-    .string {
-        display: flex;
-        padding: 16px;
-    }
-
-    .context {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-    }
-
-    .key {
-        color: gray;
-        padding-left: 8px;
-    }
-
-    .translation {
-        display: flex;
-        flex: 1;
-        textarea {
-            flex: 1;
-        }
-    }
 </style>

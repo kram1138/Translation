@@ -1,0 +1,10 @@
+someString:
+  - v: Hello world
+    t: '2021-04-07T14:20:14.060Z'
+  - v: Hello world2
+    t: '2021-04-07T14:20:14.060Z'
+otherString:
+  - v: Hello other
+    t: '2021-04-07T14:20:14.060Z'
+  - v: Hello other2
+    t: '2021-04-07T14:20:14.060Z'
