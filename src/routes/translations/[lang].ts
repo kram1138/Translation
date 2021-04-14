@@ -1,26 +1,38 @@
-import type { LanguageDef } from "$lib/translations";
+import { Language, save, Strings, stringsFromLang, updateFile } from "$lib/translations";
 import type { RequestHandler } from "@sveltejs/kit";
-import { writeFile, readFile } from "fs";
-import { dump, load } from "js-yaml";
-import { promisify } from "util";
 
-export const get: RequestHandler = async ({ params }) => {
+export const get: RequestHandler = async ({ params, query }) => {
     try {
-        const contents = load((await promisify(readFile)(`./static/translations/${params.lang}.yaml`)).toString()) as LanguageDef;
-        console.log(contents);
-        return {
-            body: contents,
-        }
+        const body = await stringsFromLang(`./static/translations/${params.lang}.yaml`, !!query.get("full"));
+        return { body };
     } catch (error) {
         console.warn(error);
         return { status: 500 }
     }
 };
 
-export const post: RequestHandler = async ({ params, body }) => {
+export const patch: RequestHandler<unknown, Strings> = async ({ body, params }) => {
     try {
-        const content: LanguageDef = JSON.parse(body.toString());
-        await promisify(writeFile)(`./static/translations/${params.lang}.yaml`, dump(content));
+        const str = JSON.parse(body.toString());
+        await updateFile(`./static/translations/${params.lang}.yaml`, str);
+    } catch (error) {
+        console.warn(error);
+        return { status: 500 }
+    }
+    return {
+        status: 200,
+        body: ""
+    };
+}
+
+export const post: RequestHandler<unknown, Strings> = async ({ body, params }) => {
+    try {
+        const t = new Date().toISOString();
+        const content = Object.entries(JSON.parse(body.toString()) as Strings).reduce<Language>((acc, [key, value]) => {
+            acc[key] = { vs: [{ v: value, t }] };
+            return acc;
+        }, {});
+        await save(`./static/translations/${params.lang}.yaml`, content);
     } catch (error) {
         console.warn(error);
         return { status: 500 }

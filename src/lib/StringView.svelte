@@ -1,64 +1,30 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import type { StringDef } from "./translations";
 
     export let key: string;
-    export let src: StringDef[];
-    export let dest: StringDef[];
-
-    const formatter = Intl.DateTimeFormat("en-CA", {
-        dateStyle: "medium",
-        timeStyle: "medium",
-    });
+    export let src: string;
+    export let dest: string;
+    export let selected = false;
 
     const d = createEventDispatcher();
-
-    let fullView = false;
 
     function save(event: Event) {
         d("save", (event.target as HTMLInputElement).value);
     }
+
+    function select() {
+        d("select");
+    }
 </script>
 
-<div class="string">
-    {#if !fullView}
-        <div class="context">
-            <div class="source">{src?.[0]?.v}</div>
-            <div class="key">key: {key}</div>
-        </div>
-        <div class="translation">
-            <textarea value={dest?.[0]?.v} on:change={save} />
-            <div class="timestamp">
-                Last modified: {formatter.format(new Date(dest?.[0]?.t))}
-                <button on:click={() => (fullView = true)}>
-                    Show history
-                </button>
-            </div>
-        </div>
-    {:else}
-        <div class="context">
-            {#each src as s}
-                <div class="source">
-                    {s.v}:
-                    <span class="timestamp"
-                        >{formatter.format(new Date(s.t))}</span
-                    >
-                </div>
-            {/each}
-            <div class="key">key: {key}</div>
-        </div>
-        <div class="translation">
-            {#each dest as d}
-                <div>
-                    {d.v}:
-                    <span class="timestamp"
-                        >{formatter.format(new Date(d.t))}</span
-                    >
-                </div>
-            {/each}
-        </div>
-        <button on:click={() => (fullView = false)}> Hide history </button>
-    {/if}
+<div class="string" class:selected on:click={select}>
+    <div class="context">
+        <div class="source">{src}</div>
+        <div class="key">key: {key}</div>
+    </div>
+    <div class="translation">
+        <textarea value={dest} on:change={save} />
+    </div>
 </div>
 
 <style lang="scss">
@@ -68,6 +34,10 @@
         padding: 8px;
         border: 1px solid lightgray;
     }
+
+    .string:hover {
+            background-color: rgb(250, 250, 250);
+        }
 
     .context {
         display: flex;
@@ -92,5 +62,9 @@
     .timestamp {
         font-size: 12px;
         color: gray;
+    }
+
+    .selected {
+        background-color: rgb(238, 238, 238);
     }
 </style>

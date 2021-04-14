@@ -1,0 +1,12 @@
+someString:
+  vs:
+    - v: Hello world
+      t: "2021-04-09T14:35:07.453Z"
+otherString:
+  vs:
+    - v: Hello other
+      t: "2021-04-09T14:35:07.453Z"
+thirdString:
+  vs:
+    - v: Hello third
+      t: "2021-04-09T14:35:07.453Z"
